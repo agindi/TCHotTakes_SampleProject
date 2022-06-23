@@ -1,8 +1,48 @@
 import numpy as np
 import pandas as pd
 
+import matplotlib.pyplot as plt
+
 def main():
-    print(load_data())
+    df = load_data()
+    #print(df)
+
+    #question: which types of developer are more generally dissatisfied?
+    df2 = pd.DataFrame()
+    
+    df2['end'] = df['end']
+    df2['moving_image'] = df['moving_image']
+
+    df2['end'] = df2.apply(lambda x: 0 if x['end'] == 'back' else 1, axis=1)
+    df2['moving_image'] = df2.apply(lambda x: 0 if x['moving_image'] == 'Gif' else 1, axis=1)
+
+    print(df2)
+    print(df2.corr()) 
+
+    # adapted from example from https://matplotlib.org/
+    labels = ['"Gif"', '"Jif"']
+    front_vals = [len(df[(df['end'] == 'front') & (df['moving_image'] == 'Gif')]), len(df[(df['end'] == 'front') & (df['moving_image'] == 'Jif')])]
+    back_vals = [len(df[(df['end'] == 'back') & (df['moving_image'] == 'Gif')]), len(df[(df['end'] == 'back') & (df['moving_image'] == 'Jif')])]
+
+    x = np.arange(len(labels))  # the label locations
+    width = 0.35  # the width of the bars
+
+    fig, ax = plt.subplots()
+    rects1 = ax.bar(x - width/2, front_vals, width, label='Frontend')
+    rects2 = ax.bar(x + width/2, back_vals, width, label='Backend')
+
+    # Add some text for labels, title and custom x-axis tick labels, etc.
+    ax.set_ylabel('Number of Responses')
+    ax.set_title('Are backend developers right about GIFs?')
+    ax.set_xticks(x, labels)
+    ax.legend()
+
+    ax.bar_label(rects1, padding=3)
+    ax.bar_label(rects2, padding=3)
+
+    fig.tight_layout()
+
+    plt.show()
 
 def load_data():
     df = pd.read_excel("./data.xlsx")
