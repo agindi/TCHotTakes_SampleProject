@@ -7,15 +7,15 @@ def main():
     df = load_data()
     print(df)
 
-    #question: Does time at the bank make you confused about sandwiches?
+    #question: How does time at the bank affect sandwich confusion?
+    
     df2 = pd.DataFrame()
     
-    df2['cohort'] = df['cohort'] #df[df.cohort.isin(['2021 TDP', '2020 TDP'])]['cohort']
+    df2['cohort'] = df['cohort']
     df2['hotdog_correct'] = 1 - df['hotdog']
     df2['pizza_fold_correct'] = 1 - df['pizza_fold']
     df2['sandwich_confusion_score'] = 2 - df2['hotdog_correct'] - df2['pizza_fold_correct']
 
-    #df2['cohort'] = df2.apply(lambda x: 1 if x['cohort'] == '2021 TDP' el x['cohort'] == '2020 TDP'] 2 else 0, axis=1)
     def time_at_bank(x):
         if x == '2021 TDP':
             return 1
@@ -60,10 +60,6 @@ def display_visual(df):
 
     plt.show()
 
-def normalize(a):
-    sum_a = sum(a)
-    return [i / sum_a for i in a]
-
 def load_data():
     df = pd.read_csv("./data.csv")
 
@@ -96,7 +92,6 @@ def load_data():
     df['lasagna'] = df.apply(lambda x: 1 if x['lasagna'] == 'One Lasagna' else 2, axis=1)
     
     return df
-
 
 if __name__ == '__main__':
     main()
