@@ -5,47 +5,67 @@ import matplotlib.pyplot as plt
 
 def main():
     df = load_data()
-    #print(df)
+    print(df)
 
-    #question: which types of developer are more generally dissatisfied?
+    #question: Does time at the bank make you confused about sandwiches?
     df2 = pd.DataFrame()
     
-    df2['end'] = df['end']
-    df2['moving_image'] = df['moving_image']
+    df2['cohort'] = df['cohort'] #df[df.cohort.isin(['2021 TDP', '2020 TDP'])]['cohort']
+    df2['hotdog_correct'] = 1 - df['hotdog']
+    df2['pizza_fold_correct'] = 1 - df['pizza_fold']
+    df2['sandwich_confusion_score'] = 2 - df2['hotdog_correct'] - df2['pizza_fold_correct']
 
-    df2['end'] = df2.apply(lambda x: 0 if x['end'] == 'back' else 1, axis=1)
-    df2['moving_image'] = df2.apply(lambda x: 0 if x['moving_image'] == 'Gif' else 1, axis=1)
-
+    #df2['cohort'] = df2.apply(lambda x: 1 if x['cohort'] == '2021 TDP' el x['cohort'] == '2020 TDP'] 2 else 0, axis=1)
+    def time_at_bank(x):
+        if x == '2021 TDP':
+            return 1
+        elif x == '2020 TDP':
+            return 2
+        else:
+            return 0
+    
+    df2['time_at_bank'] = df2['cohort'].apply(time_at_bank)
+    
     print(df2)
     print(df2.corr()) 
 
-    # adapted from example from https://matplotlib.org/
-    labels = ['"Gif"', '"Jif"']
-    front_vals = [len(df[(df['end'] == 'front') & (df['moving_image'] == 'Gif')]), len(df[(df['end'] == 'front') & (df['moving_image'] == 'Jif')])]
-    back_vals = [len(df[(df['end'] == 'back') & (df['moving_image'] == 'Gif')]), len(df[(df['end'] == 'back') & (df['moving_image'] == 'Jif')])]
+    display_visual(df2)
 
-    x = np.arange(len(labels))  # the label locations
-    width = 0.35  # the width of the bars
+def display_visual(df):
+    # look at examples from https://matplotlib.org/
+    labels = [ 'New', '1 Year', '2 Years']
 
-    fig, ax = plt.subplots()
-    rects1 = ax.bar(x - width/2, front_vals, width, label='Frontend')
-    rects2 = ax.bar(x + width/2, back_vals, width, label='Backend')
+    totals_time = [len(df[df['time_at_bank'] == i]) for i in range(0, 3)]
 
-    # Add some text for labels, title and custom x-axis tick labels, etc.
-    ax.set_ylabel('Number of Responses')
-    ax.set_title('Are backend developers right about GIFs?')
-    ax.set_xticks(x, labels)
+    very_conf_vals = [len(df[(df['sandwich_confusion_score'] == 2) & (df['time_at_bank'] == i)]) for i in range(0, 3)]
+    lil_conf_vals =  [len(df[(df['sandwich_confusion_score'] == 1) & (df['time_at_bank'] == i)]) for i in range(0, 3)]
+    not_conf_vals =  [len(df[(df['sandwich_confusion_score'] == 0) & (df['time_at_bank'] == i)]) for i in range(0, 3)]
+
+    for i in range(0, 3):
+        very_conf_vals[i] = very_conf_vals[i] / totals_time[i]
+        lil_conf_vals[i] = lil_conf_vals[i] / totals_time[i]
+        not_conf_vals[i] = not_conf_vals[i] / totals_time[i]
+
+    width = 0.35       # the width of the bars: can also be len(x) sequence
+
+    _, ax = plt.subplots()
+
+    ax.bar(labels, very_conf_vals, width, bottom=[lil_conf_vals[i] + not_conf_vals[i] for i in range(0,3)], label='Very Confused')
+    ax.bar(labels, lil_conf_vals, width, bottom=not_conf_vals, label='Somewhat Confused')
+    ax.bar(labels, not_conf_vals, width, label='Not Confused')
+
+    ax.set_ylabel('Proportion Confused')
+    ax.set_title('Sandwich Confusion vs. Time Spent at M&T')
     ax.legend()
-
-    ax.bar_label(rects1, padding=3)
-    ax.bar_label(rects2, padding=3)
-
-    fig.tight_layout()
 
     plt.show()
 
+def normalize(a):
+    sum_a = sum(a)
+    return [i / sum_a for i in a]
+
 def load_data():
-    df = pd.read_excel("./data.xlsx")
+    df = pd.read_csv("./data.csv")
 
     # remove unused columns
     for label in ['#' , 'Start Date (UTC)', 'Submit Date (UTC)', 'Network ID']:
